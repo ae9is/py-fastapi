@@ -1,0 +1,48 @@
+{
+  "family": "pyapi",
+  "containerDefinitions": [
+    {
+      "name": "fastapi",
+      "image":"123456789012.dkr.ecr.us-east-1.amazonaws.com/fastapi:pyapi-fastapi",
+      "cpu": 0,
+      "memoryReservation": 2048,
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:5000/v1/healthz || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 30,
+        "startPeriod": 5,
+        "retries": 3
+      },
+      "essential": true,
+      "environment": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/fastapi",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs",
+          "max-buffer-size": "25m",
+          "mode": "non-blocking"
+        }
+      }
+    }
+  ],
+  "executionRoleArn": "arn:aws:iam::123456789012:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "2048"
+}

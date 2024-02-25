@@ -1,0 +1,103 @@
+[project]
+name = "py-fastapi"
+version = "0.0.0"
+readme = "README.md"
+description = "Boilerplate for Python+FastAPI+Cognito"
+requires-python = ">=3.9, <3.12"
+license = {text = "MIT"}
+authors = [
+  {name = "ae9is", email = "aegis.opensource@gmail.com"}
+]
+dependencies = [
+    "python-dotenv>=1.0.1",
+    "torch @ https://download.pytorch.org/whl/cpu-cxx11-abi/torch-2.2.0%2Bcpu.cxx11.abi-cp311-cp311-linux_x86_64.whl",
+    "numpy>=1.26.4", # Required
+    "fastapi>=0.109.2",
+    "fastapi-cloudauth>=0.4.3",
+]
+
+#[project.scripts]
+#api = "api.app:main"
+
+# ref: https://github.com/pdm-project/pdm/issues/2189
+[tool.pdm.options]
+lock = ["--no-cross-platform"]
+
+[tool.pdm]
+distribution = false # true
+
+[tool.pdm.scripts]
+
+# Setup and misc
+install-all = "pdm install -G:all"
+lint = "ruff check src test"
+format = "ruff format ."
+safety = { shell = "pdm export -o requirements.txt && safety check -r requirements.txt --bare" }
+post_install = { shell = """
+  pdm export -o requirements.txt && 
+  pdm export --prod -o requirements.prod.txt
+""" }
+clean = "rm -rf .venv .pdm-build .pdm-python .ruff_cache dist .pytest_cache"
+
+# Build, deploy
+docker-login = { shell = """
+  aws ecr get-login-password --region $AWS_REGION | 
+  docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+""" }
+docker-build = { shell = "docker build -t fastapi:pyapi-fastapi -f Dockerfile ." }
+docker-bash = { shell = """
+  IMG_ID=`docker image ls | grep pyapi-fastapi | awk '{print $3}' | head -n 1` &&
+  docker run -it --entrypoint /bin/bash $IMG_ID
+""" }
+docker-tag = { shell = """
+  IMG_ID=`docker image ls | grep pyapi-fastapi | awk '{print $3}' | head -n 1` &&
+  docker tag $IMG_ID $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fastapi:pyapi-fastapi
+""" }
+docker-push = { shell = """
+  docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fastapi:pyapi-fastapi
+""" }
+
+# Local testing
+asgi = "uvicorn --port 5000 --reload --app-dir src api.app:app"
+docker-run = "docker run -it -p 5000:5000 fastapi:pyapi-fastapi"
+test = "python -m pytest" # Depends on one of: pdm asgi, pdm docker-run
+
+# Aliases
+dev = "pdm asgi"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "ruff>=0.2.1",
+    "pytest>=8.0.0",
+    "safety>=2.3.5",
+    "packaging>=23.2",
+    "gunicorn>=21.2.0",
+    "uvicorn[standard]>=0.27.0.post1",
+    "requests>=2.31.0",
+]
+
+#[tool.pdm.build]
+#excludes = ["./**/.git"]
+#package-dir = "src"
+#includes = ["src/api/**/*.py"]
+#source-includes = ["test", "LICENSE", "README.md", "requirements.prod.txt"]
+
+[tool.ruff]
+exclude = [
+  ".git",
+  ".venv",
+  "__pycache__",
+  "*.bak",
+  "*.pyc",
+]
+line-length = 120
+indent-width = 2
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "src",
+]

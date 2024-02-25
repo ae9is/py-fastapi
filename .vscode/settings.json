@@ -1,0 +1,22 @@
+{
+  "files.associations": {
+    "*.json": "jsonc"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.tabSize": 2,
+    "editor.formatOnSave": false,
+    "editor.rulers": [
+      120
+    ]
+  },
+  "python.defaultInterpreterPath": ".venv/bin/python3",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.extraPaths": [
+    ".venv/lib/python3.11/site-packages",
+    "packages/*/.venv/lib/python3.11/site-packages"
+  ],
+  "python.analysis.fixAll": [
+    "source.unusedImports"
+  ],
+}
